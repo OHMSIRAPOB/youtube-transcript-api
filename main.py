@@ -1,21 +1,20 @@
-import requests
 from flask import Flask, request, jsonify
+import requests
 
 app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return 'Hello from youtube-transcript-api (proxy)! Use /subtitles?id=VIDEO_ID'
 
 @app.route('/subtitles')
 def get_subtitles():
     video_id = request.args.get('id')
-    try:
-        res = requests.get(f'https://youtube-transcript-api.deno.dev/?id={video_id}')
-        data = res.text
-        return data, res.status_code, {'Content-Type': 'application/json'}
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+    if not video_id:
+        return jsonify({'error': 'No video ID provided'}), 400
 
-@app.route('/')
-def home():
-    return '✅ Hello from youtube-transcript-api (proxy)! Use /subtitles?id=VIDEO_ID'
+    response = requests.get(f'https://youtube-transcript-api.deno.dev/?id={video_id}')
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch transcript'}), response.status_code
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000)
+    return jsonify(response.json())
