@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
-import requests
+from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api.formatters import JSONFormatter
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return 'Hello from youtube-transcript-api (proxy)! Use /subtitles?id=VIDEO_ID'
+    return 'Hello from youtube-transcript-api! Use /subtitles?id=VIDEO_ID'
 
 @app.route('/subtitles')
 def get_subtitles():
@@ -13,8 +14,9 @@ def get_subtitles():
     if not video_id:
         return jsonify({'error': 'No video ID provided'}), 400
 
-    response = requests.get(f'https://youtube-transcript-api.deno.dev/?id={video_id}')
-    if response.status_code != 200:
-        return jsonify({'error': 'Failed to fetch transcript'}), response.status_code
-
-    return jsonify(response.json())
+    try:
+        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=['en'])
+        formatter = JSONFormatter()
+        return jsonify(transcript)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
