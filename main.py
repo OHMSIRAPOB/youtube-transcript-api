@@ -8,7 +8,8 @@ def get_subtitles():
     video_id = request.args.get('id')
     try:
         res = requests.get(f'https://youtube-transcript-api.deno.dev/?id={video_id}')
-        return jsonify(res.json())
+        data = res.text
+        return data, res.status_code, {'Content-Type': 'application/json'}
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
